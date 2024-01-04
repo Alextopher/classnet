@@ -1,4 +1,4 @@
-package classnet
+package main
 
 import (
 	"encoding/json"
@@ -49,6 +49,7 @@ func (c *Client) AddConnection(conn *websocket.Conn) {
 	c.Lock()
 	c.connections[conn] = struct{}{}
 	c.Unlock()
+	go c.ReadPump(conn)
 }
 
 // RemoveConnection removes a websocket connection from this client
@@ -60,9 +61,12 @@ func (c *Client) RemoveConnection(conn *websocket.Conn) {
 
 // Send sends a message to the client
 func (c *Client) Send(msg Message) error {
+	log.Printf("Sending message to %s: %v\n", c.Name, msg)
+
 	// JSON encode the message
 	bytes, err := json.Marshal(msg)
 	if err != nil {
+		log.Printf("Failed to encode message: %v\n", err)
 		return err
 	}
 	c.send <- bytes
@@ -71,12 +75,17 @@ func (c *Client) Send(msg Message) error {
 
 // SendBytes sends a byte array to the client
 func (c *Client) SendBytes(bytes []byte) {
+	log.Printf("Sending bytes to %s: %s\n", c.Name, bytes)
+
 	c.send <- bytes
 }
 
 // WritePump pumps messages from the client's send channel to all of its connections
 func (c *Client) WritePump() {
+	log.Printf("Starting write pump for %s\n", c.Name)
+
 	for bytes := range c.send {
+		log.Printf("Sending bytes to the %d connections of %s\n", len(c.connections), c.Name)
 		c.Lock()
 
 		// Timeout 2 seconds
@@ -98,29 +107,32 @@ func (c *Client) WritePump() {
 
 // ReadPump starts a goroutine to read messages from a connection and send them to the client's receive channel
 func (c *Client) ReadPump(conn *websocket.Conn) {
-	go func() {
-		for {
-			_, bytes, err := conn.ReadMessage()
-			if err != nil {
-				break
-			}
-
-			// Decode the message
-			var msg Message
-			err = json.Unmarshal(bytes, &msg)
-			if err != nil {
-				// Send an error message to this connection
-				log.Printf("Failed to decode message: %v\n", err)
-				errBytes, _ := NewError("Failed to decode message").Marshal()
-				conn.WriteMessage(websocket.TextMessage, errBytes)
-			}
-
-			// Forward the message to the client
-			c.receive <- msg
+	for {
+		_, bytes, err := conn.ReadMessage()
+		if err != nil {
+			break
 		}
-		c.RemoveConnection(conn)
-		conn.Close()
-	}()
+
+		log.Printf("Received bytes from %s: %s\n", c.Name, bytes)
+
+		// Decode the message
+		var msg Message
+		err = json.Unmarshal(bytes, &msg)
+		if err != nil {
+			// Send an error message to this connection
+			log.Printf("Failed to decode message: %v\n", err)
+			errBytes, _ := NewError("Failed to decode message").Marshal()
+			conn.WriteMessage(websocket.TextMessage, errBytes)
+			continue
+		}
+
+		log.Printf("Received message from %s: %v\n", c.Name, msg)
+
+		// Forward the message to the client
+		c.receive <- msg
+	}
+	c.RemoveConnection(conn)
+	conn.Close()
 }
 
 // Close closes all of the client's connections

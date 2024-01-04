@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CLASSNET</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <h1>CLASSNET - {{ . }}</h1>
+
+    <!-- password key -->
+    <h3>Key:</h3>
+    <input type="password" id="key" name="key" placeholder="Enter key here">
+
+    <!-- start button -->
+    <button id="start" onclick="on_start()">Start</button>
+    <!-- stop button -->
+    <button id="stop" onclick="on_stop()">Stop</button>
+
+    <!-- reset button -->
+    <button id="reset" onclick="on_reset()">Reset</button>
+
+    <!-- destroy button -->
+    <button id="destroy" onclick="on_destroy()">Destroy</button>
+
+    <script>
+        function get_code() {
+            return window.location.pathname.split('/')[2];
+        }
+
+        function get_key() {
+            return document.getElementById("key").value;
+        }
+
+        async function on_start() {
+            var code = get_code();
+            var key = get_key();
+
+            // Just post to /room/<code>/start?key=<key>
+            var response = await fetch('/room/' + code + '/start?key=' + key, {
+                method: 'POST'
+            });
+        }
+
+        async function on_stop() {
+            var code = get_code();
+            var key = get_key();
+
+            // Just post to /room/<code>/stop?key=<key>
+            var response = await fetch('/room/' + code + '/stop?key=' + key, {
+                method: 'POST'
+            });
+        }
+
+        async function on_reset() {
+            var code = get_code();
+            var key = get_key();
+
+            // Just post to /room/<code>/stop?key=<key>
+            var response = await fetch('/room/' + code + '/reset?key=' + key, {
+                method: 'POST'
+            });
+        }
+
+        async function on_destroy() {
+            var code = get_code();
+            var key = get_key();
+
+            // Just post to /room/<code>/destroy?key=<key>
+            var response = await fetch('/room/' + code + '/reset?key=' + key, {
+                method: 'POST'
+            });
+        }
+    </script>
+</body>
+
+</html>

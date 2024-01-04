@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>CLASSNET</title>
+</head>
+
+<body>
+    <h1>CLASSNET</h1>
+
+    <!-- 4 character room code redirect -->
+    <form action="/room/join" method="POST">
+        <label for="code">Enter Room Code</label>
+        <input type="text" name="code" maxlength="4" placeholder="Room Code" required>
+        </br>
+        <input type="submit" value="Join">
+    </form>
+</body>
+
+</html>

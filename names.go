@@ -1,4 +1,4 @@
-package classnet
+package main
 
 import "math/rand"
 
@@ -49,8 +49,8 @@ var Animals = []string{
 
 // Name is a color + an animal.
 type Name struct {
-	Color  string `json:"color"`
-	Animal string `json:"animal"`
+	Color  string
+	Animal string
 }
 
 // NewName creates a new name.
@@ -61,4 +61,32 @@ func NewName() Name {
 		Color:  color,
 		Animal: animal,
 	}
+}
+
+// String returns the name as a string.
+func (name Name) String() string {
+	return name.Color + " " + name.Animal
+}
+
+// MarshalText marshals the name as a JSON string.
+func (name Name) MarshalText() ([]byte, error) {
+	return []byte(`"` + name.String() + `"`), nil
+}
+
+// UnMarshalText unmarshals a JSON string to a name.
+func (name *Name) UnmarshalText(b []byte) error {
+	// Remove the quotes
+	b = b[1 : len(b)-1]
+
+	// Split the string into color and animal
+	s := string(b)
+	for i := 0; i < len(s); i++ {
+		if s[i] == ' ' {
+			name.Color = s[:i]
+			name.Animal = s[i+1:]
+			return nil
+		}
+	}
+
+	return nil
 }

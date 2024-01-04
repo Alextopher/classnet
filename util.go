@@ -1,4 +1,4 @@
-package classnet
+package main
 
 import "math/rand"
 
